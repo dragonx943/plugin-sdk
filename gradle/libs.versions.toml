@@ -1,0 +1,17 @@
+[versions]
+agp = "8.5.1"
+kotlin = "2.0.10-RC"
+okhttp = "4.12.0"
+jsoup = "1.18.1"
+collection = "1.4.2"
+
+[libraries]
+okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
+jsoup = { group = "org.jsoup", name = "jsoup", version.ref = "jsoup" }
+collection = { group = "androidx.collection", name = "collection", version.ref = "collection" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+android-library = { id = "com.android.library", version.ref = "agp" }
+maven-publish = { id = "maven-publish" }
