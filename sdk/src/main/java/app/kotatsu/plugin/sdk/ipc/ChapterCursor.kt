@@ -15,7 +15,7 @@ class ChapterCursor(
         COLUMN_VOLUME -> volume
         COLUMN_URL -> url
         COLUMN_SCANLATOR -> scanlator
-        COLUMN_UPLOADDATE -> uploadDate
+        COLUMN_UPLOAD_DATE -> uploadDate
         COLUMN_BRANCH -> branch
         else -> throw IndexOutOfBoundsException()
     }
@@ -28,7 +28,7 @@ class ChapterCursor(
         const val COLUMN_VOLUME = "volume"
         const val COLUMN_URL = "url"
         const val COLUMN_SCANLATOR = "scanlator"
-        const val COLUMN_UPLOADDATE = "uploadDate"
+        const val COLUMN_UPLOAD_DATE = "upload_date"
         const val COLUMN_BRANCH = "branch"
 
         val COLUMNS = arrayOf(
@@ -38,7 +38,7 @@ class ChapterCursor(
             COLUMN_VOLUME,
             COLUMN_URL,
             COLUMN_SCANLATOR,
-            COLUMN_UPLOADDATE,
+            COLUMN_UPLOAD_DATE,
             COLUMN_BRANCH,
         )
     }

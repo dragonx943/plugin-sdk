@@ -10,15 +10,15 @@ class CapabilitiesCursor(
     override fun getColumnNames(): Array<String> = COLUMNS
 
     override fun MangaSourceCapabilities.getColumnValue(column: String): Any? = when (column) {
-        AVAILABLE_SORT_ORDERS -> availableSortOrders.namesToString()
-        AVAILABLE_STATES -> availableStates.namesToString()
-        AVAILABLE_CONTENT_RATING -> availableContentRating.namesToString()
-        IS_MULTIPLE_TAGS_SUPPORTED -> isMultipleTagsSupported.asInt()
-        IS_TAGS_EXCLUSION_SUPPORTED -> isTagsExclusionSupported.asInt()
-        IS_SEARCH_SUPPORTED -> isSearchSupported.asInt()
-        CONTENT_TYPE -> contentType.name
-        DEFAULT_SORT_ORDER -> defaultSortOrder.name
-        SOURCE_LOCALE -> sourceLocale.language
+        COLUMN_SORT_ORDERS -> availableSortOrders.namesToString()
+        COLUMN_STATES -> availableStates.namesToString()
+        COLUMN_CONTENT_RATING -> availableContentRating.namesToString()
+        COLUMN_MULTIPLE_TAGS_SUPPORTED -> isMultipleTagsSupported.asInt()
+        COLUMN_TAGS_EXCLUSION_SUPPORTED -> isTagsExclusionSupported.asInt()
+        COLUMN_SEARCH_SUPPORTED -> isSearchSupported.asInt()
+        COLUMN_CONTENT_TYPE -> contentType.name
+        COLUMN_DEFAULT_SORT_ORDER -> defaultSortOrder.name
+        COLUMN_LOCALE -> sourceLocale.language
         else -> throw IndexOutOfBoundsException()
     }
 
@@ -26,26 +26,26 @@ class CapabilitiesCursor(
 
     companion object {
 
-        const val AVAILABLE_SORT_ORDERS = "availableSortOrders"
-        const val AVAILABLE_STATES = "availableStates"
-        const val AVAILABLE_CONTENT_RATING = "availableContentRating"
-        const val IS_MULTIPLE_TAGS_SUPPORTED = "isMultipleTagsSupported"
-        const val IS_TAGS_EXCLUSION_SUPPORTED = "isTagsExclusionSupported"
-        const val IS_SEARCH_SUPPORTED = "isSearchSupported"
-        const val CONTENT_TYPE = "contentType"
-        const val DEFAULT_SORT_ORDER = "defaultSortOrder"
-        const val SOURCE_LOCALE = "sourceLocale"
+        const val COLUMN_SORT_ORDERS = "sort_orders"
+        const val COLUMN_STATES = "states"
+        const val COLUMN_CONTENT_RATING = "content_rating"
+        const val COLUMN_MULTIPLE_TAGS_SUPPORTED = "multiple_tags_supported"
+        const val COLUMN_TAGS_EXCLUSION_SUPPORTED = "tags_exclusion_supported"
+        const val COLUMN_SEARCH_SUPPORTED = "search_supported"
+        const val COLUMN_CONTENT_TYPE = "content_type"
+        const val COLUMN_DEFAULT_SORT_ORDER = "default_sort_order"
+        const val COLUMN_LOCALE = "locale"
 
         val COLUMNS = arrayOf(
-            AVAILABLE_SORT_ORDERS,
-            AVAILABLE_STATES,
-            AVAILABLE_CONTENT_RATING,
-            IS_MULTIPLE_TAGS_SUPPORTED,
-            IS_TAGS_EXCLUSION_SUPPORTED,
-            IS_SEARCH_SUPPORTED,
-            CONTENT_TYPE,
-            DEFAULT_SORT_ORDER,
-            SOURCE_LOCALE,
+            COLUMN_SORT_ORDERS,
+            COLUMN_STATES,
+            COLUMN_CONTENT_RATING,
+            COLUMN_MULTIPLE_TAGS_SUPPORTED,
+            COLUMN_TAGS_EXCLUSION_SUPPORTED,
+            COLUMN_SEARCH_SUPPORTED,
+            COLUMN_CONTENT_TYPE,
+            COLUMN_DEFAULT_SORT_ORDER,
+            COLUMN_LOCALE,
         )
     }
 }
