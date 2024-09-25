@@ -1,6 +1,7 @@
 package app.kotatsu.plugin.sdk.ipc
 
 import app.kotatsu.plugin.sdk.core.MangaListFilterCapabilities
+import app.kotatsu.plugin.sdk.util.asInt
 import app.kotatsu.plugin.sdk.util.namesToString
 
 internal class CapabilitiesCursor(
@@ -11,13 +12,13 @@ internal class CapabilitiesCursor(
 
     override fun MangaListFilterCapabilities.getColumnValue(column: String): Any = when (column) {
         COLUMN_SORT_ORDERS -> availableSortOrders.namesToString()
-        COLUMN_MULTIPLE_TAGS -> isMultipleTagsSupported
-        COLUMN_TAGS_EXCLUSION -> isTagsExclusionSupported
-        COLUMN_SEARCH -> isSearchSupported
-        COLUMN_SEARCH_WITH_FILTERS -> isSearchWithFiltersSupported
-        COLUMN_YEAR -> isYearSupported
-        COLUMN_YEAR_RANGE -> isYearRangeSupported
-        COLUMN_ORIGINAL_LOCALE -> isOriginalLocaleSupported
+        COLUMN_MULTIPLE_TAGS -> isMultipleTagsSupported.asInt()
+        COLUMN_TAGS_EXCLUSION -> isTagsExclusionSupported.asInt()
+        COLUMN_SEARCH -> isSearchSupported.asInt()
+        COLUMN_SEARCH_WITH_FILTERS -> isSearchWithFiltersSupported.asInt()
+        COLUMN_YEAR -> isYearSupported.asInt()
+        COLUMN_YEAR_RANGE -> isYearRangeSupported.asInt()
+        COLUMN_ORIGINAL_LOCALE -> isOriginalLocaleSupported.asInt()
         else -> throw IndexOutOfBoundsException()
     }
 

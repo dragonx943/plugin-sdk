@@ -20,6 +20,7 @@ import app.kotatsu.plugin.sdk.ipc.EnumCursor
 import app.kotatsu.plugin.sdk.ipc.LocaleCursor
 import app.kotatsu.plugin.sdk.ipc.MangaCursor
 import app.kotatsu.plugin.sdk.ipc.PageCursor
+import app.kotatsu.plugin.sdk.ipc.StringCursor
 import app.kotatsu.plugin.sdk.ipc.TagCursor
 import app.kotatsu.plugin.sdk.util.find
 import app.kotatsu.plugin.sdk.util.mapNotNullToSet
@@ -41,6 +42,7 @@ public abstract class KotatsuParserContentProvider<P : MangaParser>(
         uriMatcher.addURI(authority, "manga", URI_MANGA_LIST)
         uriMatcher.addURI(authority, "filter/tags", URI_TAGS)
         uriMatcher.addURI(authority, "manga/chapters/*", URI_CHAPTERS)
+        uriMatcher.addURI(authority, "manga/pages/*", URI_PAGE_URL)
         uriMatcher.addURI(authority, "manga/*", URI_MANGA_DETAILS)
         uriMatcher.addURI(authority, "chapters/*", URI_PAGES)
         uriMatcher.addURI(authority, "capabilities", URI_CAPABILITIES)
@@ -107,6 +109,10 @@ public abstract class KotatsuParserContentProvider<P : MangaParser>(
         URI_DEMOGRAPHICS -> EnumCursor(parser.filterOptionsLazy.availableDemographics.toList())
         URI_LOCALES -> LocaleCursor(parser.filterOptionsLazy.availableLocales.toList())
 
+        URI_PAGE_URL -> uri.getQueryParameter("url")?.let { pageUrl ->
+            StringCursor(listOf(parser.getPageUrl(pageUrl)))
+        }
+
         else -> null
     }
 
@@ -154,5 +160,6 @@ public abstract class KotatsuParserContentProvider<P : MangaParser>(
         const val URI_CONTENT_TYPES = 9
         const val URI_DEMOGRAPHICS = 10
         const val URI_LOCALES = 11
+        const val URI_PAGE_URL = 12
     }
 }
