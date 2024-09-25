@@ -7,17 +7,26 @@ import android.database.Cursor
 import android.net.Uri
 import androidx.annotation.CallSuper
 import app.kotatsu.plugin.sdk.core.ContentRating
+import app.kotatsu.plugin.sdk.core.ContentType
+import app.kotatsu.plugin.sdk.core.Demographic
 import app.kotatsu.plugin.sdk.core.MangaListFilter
 import app.kotatsu.plugin.sdk.core.MangaParser
 import app.kotatsu.plugin.sdk.core.MangaState
 import app.kotatsu.plugin.sdk.core.MangaTag
-import app.kotatsu.plugin.sdk.core.SortOrder
+import app.kotatsu.plugin.sdk.core.YEAR_UNKNOWN
+import app.kotatsu.plugin.sdk.ipc.CapabilitiesCursor
+import app.kotatsu.plugin.sdk.ipc.ChapterCursor
+import app.kotatsu.plugin.sdk.ipc.EnumCursor
+import app.kotatsu.plugin.sdk.ipc.LocaleCursor
+import app.kotatsu.plugin.sdk.ipc.MangaCursor
+import app.kotatsu.plugin.sdk.ipc.PageCursor
+import app.kotatsu.plugin.sdk.ipc.TagCursor
 import app.kotatsu.plugin.sdk.util.find
 import app.kotatsu.plugin.sdk.util.mapNotNullToSet
 import app.kotatsu.plugin.sdk.util.splitTwoParts
 import java.util.Locale
 
-abstract class KotatsuParserContentProvider<P : MangaParser>(
+public abstract class KotatsuParserContentProvider<P : MangaParser>(
     protected val authority: String,
 ) : ContentProvider() {
 
@@ -30,11 +39,16 @@ abstract class KotatsuParserContentProvider<P : MangaParser>(
     override fun onCreate(): Boolean {
         parser = onCreateParser()
         uriMatcher.addURI(authority, "manga", URI_MANGA_LIST)
-        uriMatcher.addURI(authority, "tags", URI_TAGS)
+        uriMatcher.addURI(authority, "filter/tags", URI_TAGS)
         uriMatcher.addURI(authority, "manga/chapters/*", URI_CHAPTERS)
         uriMatcher.addURI(authority, "manga/*", URI_MANGA_DETAILS)
         uriMatcher.addURI(authority, "chapters/*", URI_PAGES)
         uriMatcher.addURI(authority, "capabilities", URI_CAPABILITIES)
+        uriMatcher.addURI(authority, "filter/states", URI_STATES)
+        uriMatcher.addURI(authority, "filter/content_ratings", URI_CONTENT_RATINGS)
+        uriMatcher.addURI(authority, "filter/content_types", URI_CONTENT_TYPES)
+        uriMatcher.addURI(authority, "filter/demographics", URI_DEMOGRAPHICS)
+        uriMatcher.addURI(authority, "filter/locales", URI_LOCALES)
         return true
     }
 
@@ -58,58 +72,74 @@ abstract class KotatsuParserContentProvider<P : MangaParser>(
         selectionArgs: Array<out String>?,
         sortOrder: String?,
     ): Cursor? = when (uriMatcher.match(uri)) {
-        URI_MANGA_LIST -> parser.getList(
-            offset = uri.getQueryParameter("offset")?.toIntOrNull() ?: 0,
-            filter = getFilter(uri, sortOrder)
+        URI_MANGA_LIST -> MangaCursor(
+            dataset = parser.getList(
+                offset = uri.getQueryParameter("offset")?.toIntOrNull() ?: 0,
+                order = parser.filterCapabilities.availableSortOrders.find(sortOrder)
+                    ?: parser.filterCapabilities.availableSortOrders.first(),
+                filter = getFilter(uri)
+            )
         )
 
-        URI_TAGS -> parser.getAvailableTags()
-        URI_MANGA_DETAILS -> parser.getDetails(requireNotNull(uri.lastPathSegment))
-        URI_CHAPTERS -> parser.getChapters(requireNotNull(uri.lastPathSegment))
-        URI_PAGES -> parser.getPages(requireNotNull(uri.lastPathSegment))
-        URI_CAPABILITIES -> parser.getCapabilities()
+        URI_TAGS -> TagCursor(
+            dataset = parser.filterOptionsLazy.availableTags.toList()
+        )
+
+        URI_MANGA_DETAILS -> MangaCursor(
+            dataset = listOf(parser.getDetails(requireNotNull(uri.lastPathSegment)))
+        )
+
+        URI_CHAPTERS -> ChapterCursor(
+            dataset = parser.getChapters(requireNotNull(uri.lastPathSegment))
+        )
+
+        URI_PAGES -> PageCursor(
+            dataset = parser.getPages(requireNotNull(uri.lastPathSegment))
+        )
+
+        URI_CAPABILITIES -> CapabilitiesCursor(
+            capabilities = parser.filterCapabilities
+        )
+
+        URI_STATES -> EnumCursor(parser.filterOptionsLazy.availableStates.toList())
+        URI_CONTENT_RATINGS -> EnumCursor(parser.filterOptionsLazy.availableContentRating.toList())
+        URI_CONTENT_TYPES -> EnumCursor(parser.filterOptionsLazy.availableContentTypes.toList())
+        URI_DEMOGRAPHICS -> EnumCursor(parser.filterOptionsLazy.availableDemographics.toList())
+        URI_LOCALES -> LocaleCursor(parser.filterOptionsLazy.availableLocales.toList())
+
         else -> null
     }
 
     protected abstract fun onCreateParser(): P
 
-    private fun getFilter(
-        uri: Uri,
-        orderBy: String?,
-    ): MangaListFilter? {
-        val query = uri.getQueryParameter("query")
-        if (!query.isNullOrEmpty()) {
-            return MangaListFilter.Search(query)
-        }
-        val tagsInclude = uri.getQueryParameters("tags_include").mapNotNullToSet {
+    private fun getFilter(uri: Uri): MangaListFilter = MangaListFilter(
+        query = uri.getQueryParameter("query"),
+        tags = uri.getQueryParameters("tags_include").mapNotNullToSet {
             val parts = it.splitTwoParts('=') ?: return@mapNotNullToSet null
             MangaTag(key = parts.first, title = parts.second)
-        }
-        val tagsExclude = uri.getQueryParameters("tags_exclude").mapNotNullToSet {
+        },
+        tagsExclude = uri.getQueryParameters("tags_exclude").mapNotNullToSet {
             val parts = it.splitTwoParts('=') ?: return@mapNotNullToSet null
             MangaTag(key = parts.first, title = parts.second)
-        }
-        val locale = uri.getQueryParameter("locale")?.let { Locale(it) }
-        val states = uri.getQueryParameters("state").mapNotNullToSet {
+        },
+        locale = uri.getQueryParameter("locale")?.let { Locale(it) },
+        originalLocale = uri.getQueryParameter("locale_original")?.let { Locale(it) },
+        states = uri.getQueryParameters("state").mapNotNullToSet {
             MangaState.entries.find(it)
-        }
-        val contentRating = uri.getQueryParameters("content_rating").mapNotNullToSet {
+        },
+        contentRating = uri.getQueryParameters("content_rating").mapNotNullToSet {
             ContentRating.entries.find(it)
-        }
-
-        return if (tagsInclude.isNotEmpty() || tagsExclude.isNotEmpty() || locale != null || orderBy != null) {
-            MangaListFilter.Advanced(
-                sortOrder = SortOrder.entries.find(orderBy) ?: parser.defaultSortOrder,
-                tags = tagsInclude,
-                tagsExclude = tagsExclude,
-                locale = locale,
-                states = states,
-                contentRating = contentRating,
-            )
-        } else {
-            null
-        }
-    }
+        },
+        types = uri.getQueryParameters("content_type").mapNotNullToSet {
+            ContentType.entries.find(it)
+        },
+        demographics = uri.getQueryParameters("demographic").mapNotNullToSet {
+            Demographic.entries.find(it)
+        },
+        year = uri.getQueryParameter("year")?.toIntOrNull() ?: YEAR_UNKNOWN,
+        yearFrom = uri.getQueryParameter("year_from")?.toIntOrNull() ?: YEAR_UNKNOWN,
+        yearTo = uri.getQueryParameter("year_to")?.toIntOrNull() ?: YEAR_UNKNOWN
+    )
 
     private companion object {
 
@@ -119,5 +149,10 @@ abstract class KotatsuParserContentProvider<P : MangaParser>(
         const val URI_CHAPTERS = 4
         const val URI_PAGES = 5
         const val URI_CAPABILITIES = 6
+        const val URI_STATES = 7
+        const val URI_CONTENT_RATINGS = 8
+        const val URI_CONTENT_TYPES = 9
+        const val URI_DEMOGRAPHICS = 10
+        const val URI_LOCALES = 11
     }
 }

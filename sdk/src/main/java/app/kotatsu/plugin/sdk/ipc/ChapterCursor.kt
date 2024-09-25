@@ -2,7 +2,7 @@ package app.kotatsu.plugin.sdk.ipc
 
 import app.kotatsu.plugin.sdk.core.MangaChapter
 
-class ChapterCursor(
+internal class ChapterCursor(
     dataset: List<MangaChapter>,
 ) : MapperCursor<MangaChapter>(dataset) {
 

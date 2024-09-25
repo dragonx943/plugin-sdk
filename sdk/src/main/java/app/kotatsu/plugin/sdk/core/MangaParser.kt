@@ -1,11 +1,5 @@
 package app.kotatsu.plugin.sdk.core
 
-import androidx.annotation.VisibleForTesting
-import app.kotatsu.plugin.sdk.ipc.CapabilitiesCursor
-import app.kotatsu.plugin.sdk.ipc.ChapterCursor
-import app.kotatsu.plugin.sdk.ipc.MangaCursor
-import app.kotatsu.plugin.sdk.ipc.PageCursor
-import app.kotatsu.plugin.sdk.ipc.TagCursor
 import app.kotatsu.plugin.sdk.network.CommonHeaders
 import app.kotatsu.plugin.sdk.network.WebClient
 import app.kotatsu.plugin.sdk.util.toAbsoluteUrl
@@ -14,59 +8,16 @@ import okhttp3.HttpUrl
 import okhttp3.Interceptor
 import okhttp3.Response
 import java.net.IDN
-import java.util.Locale
 
-abstract class MangaParser(
-    val authority: String,
-    val contentType: ContentType,
-    val contentLocale: String?,
-) : Interceptor {
+public abstract class MangaParser(internal val authority: String) : Interceptor {
 
     protected abstract val domain: String
 
-    abstract val availableSortOrders: Set<SortOrder>
+    internal val filterOptionsLazy by lazy(::getFilterOptions)
 
-    /**
-     * Supported [MangaState] variants for filtering. May be empty.
-     *
-     * For better performance use [EnumSet] for more than one item.
-     */
-    open val availableStates: Set<MangaState>
-        get() = emptySet()
+    public abstract fun getFilterOptions(): MangaListFilterOptions
 
-
-    open val availableContentRating: Set<ContentRating>
-        get() = emptySet()
-
-    /**
-     * Whether parser supports filtering by more than one tag
-     */
-    open val isMultipleTagsSupported: Boolean = true
-
-    /**
-     * Whether parser supports tagsExclude field in filter
-     */
-    open val isTagsExclusionSupported: Boolean = false
-
-    /**
-     * Whether parser supports searching by string query using [MangaListFilter.Search]
-     */
-    open val isSearchSupported: Boolean = true
-
-    open val sourceLocale: Locale
-        get() = if (contentLocale == null) Locale.ROOT else Locale(contentLocale)
-
-    val isNsfwSource = contentType == ContentType.HENTAI
-
-    /**
-     * Used as fallback if value of `sortOrder` passed to [getList] is null
-     */
-    @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
-    open val defaultSortOrder: SortOrder
-        get() {
-            val supported = availableSortOrders
-            return SortOrder.entries.first { it in supported }
-        }
+    public abstract val filterCapabilities: MangaListFilterCapabilities
 
     @JvmField
     @Suppress("LeakingThis")
@@ -83,55 +34,31 @@ abstract class MangaParser(
         return chain.proceed(newRequest)
     }
 
-    abstract fun getList(offset: Int, filter: MangaListFilter?): MangaCursor
+    public abstract fun getList(offset: Int, order: SortOrder, filter: MangaListFilter): List<Manga>
 
     /**
      * Parse details for [Manga]: chapters list, description, large cover, etc.
      * Must return the same manga, may change any fields excepts id, url and source
      * @see Manga.copy
      */
-    abstract fun getDetails(url: String): MangaCursor
+    public abstract fun getDetails(url: String): Manga
 
-    abstract fun getChapters(url: String): ChapterCursor
+    public abstract fun getChapters(url: String): List<MangaChapter>
 
     /**
      * Parse pages list for specified chapter.
      * @see MangaPage for details
      */
-    abstract fun getPages(url: String): PageCursor
+    public abstract fun getPages(url: String): List<MangaPage>
 
     /**
      * Fetch direct link to the page image.
      */
-    open fun getPageUrl(url: String): String = url.toAbsoluteUrl(domain)
-
-    /**
-     * Fetch available tags (genres) for source
-     */
-    abstract fun getAvailableTags(): TagCursor
-
-    /**
-     * Fetch available locales for multilingual sources
-     */
-    open fun getAvailableLocales(): Set<Locale> = emptySet()
+    public open fun getPageUrl(url: String): String = url.toAbsoluteUrl(domain)
 
     protected fun urlBuilder(subdomain: String? = null): HttpUrl.Builder {
         return HttpUrl.Builder()
             .scheme("https")
             .host(if (subdomain == null) domain else "$subdomain.$domain")
     }
-
-    fun getCapabilities() = CapabilitiesCursor(
-        MangaSourceCapabilities(
-            availableSortOrders = availableSortOrders,
-            availableStates = availableStates,
-            availableContentRating = availableContentRating,
-            isMultipleTagsSupported = isMultipleTagsSupported,
-            isTagsExclusionSupported = isTagsExclusionSupported,
-            isSearchSupported = isSearchSupported,
-            contentType = contentType,
-            defaultSortOrder = defaultSortOrder,
-            sourceLocale = sourceLocale
-        )
-    )
 }

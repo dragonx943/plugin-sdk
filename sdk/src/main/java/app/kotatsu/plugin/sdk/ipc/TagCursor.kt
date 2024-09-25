@@ -2,7 +2,7 @@ package app.kotatsu.plugin.sdk.ipc
 
 import app.kotatsu.plugin.sdk.core.MangaTag
 
-class TagCursor(
+internal class TagCursor(
     dataset: List<MangaTag>,
 ) : MapperCursor<MangaTag>(dataset) {
 

@@ -6,7 +6,7 @@ import java.text.DecimalFormat
 import java.text.NumberFormat
 import java.util.Locale
 
-fun Number.format(decimals: Int = 0, decPoint: Char = '.', thousandsSep: Char? = ' '): String {
+public fun Number.format(decimals: Int = 0, decPoint: Char = '.', thousandsSep: Char? = ' '): String {
 	val formatter = NumberFormat.getInstance(Locale.US) as DecimalFormat
 	val symbols = formatter.decimalFormatSymbols
 	if (thousandsSep != null) {
@@ -28,7 +28,7 @@ fun Number.format(decimals: Int = 0, decPoint: Char = '.', thousandsSep: Char? =
 	}
 }
 
-fun Float.toIntUp(): Int {
+public fun Float.toIntUp(): Int {
 	val intValue = toInt()
 	return if (this == intValue.toFloat()) {
 		intValue
@@ -37,7 +37,7 @@ fun Float.toIntUp(): Int {
 	}
 }
 
-infix fun Int.upBy(step: Int): Int {
+public infix fun Int.upBy(step: Int): Int {
 	val mod = this % step
 	return if (mod == 0) {
 		this
@@ -46,7 +46,7 @@ infix fun Int.upBy(step: Int): Int {
 	}
 }
 
-fun Number.formatSimple(): String {
+public fun Number.formatSimple(): String {
 	val raw = toString()
 	return if (raw.endsWith(".0") || raw.endsWith(",0")) {
 		raw.dropLast(2)
@@ -55,4 +55,4 @@ fun Number.formatSimple(): String {
 	}
 }
 
-fun Boolean.asInt() = if (this) 1 else 0
+public fun Boolean.asInt() = if (this) 1 else 0

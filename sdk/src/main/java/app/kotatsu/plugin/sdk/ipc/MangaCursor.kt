@@ -3,7 +3,7 @@ package app.kotatsu.plugin.sdk.ipc
 import app.kotatsu.plugin.sdk.core.Manga
 import app.kotatsu.plugin.sdk.util.asInt
 
-class MangaCursor(
+internal class MangaCursor(
     dataset: List<Manga>,
 ) : MapperCursor<Manga>(dataset) {
 

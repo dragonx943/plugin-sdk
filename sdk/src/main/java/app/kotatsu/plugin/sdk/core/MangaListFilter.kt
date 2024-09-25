@@ -1,32 +1,44 @@
 package app.kotatsu.plugin.sdk.core
 
-import java.util.Locale
+import app.kotatsu.plugin.sdk.core.ContentRating
+import java.util.*
 
-sealed interface MangaListFilter {
+public data class MangaListFilter(
+    @JvmField val query: String? = null,
+    @JvmField val tags: Set<MangaTag> = emptySet(),
+    @JvmField val tagsExclude: Set<MangaTag> = emptySet(),
+    @JvmField val locale: Locale? = null,
+    @JvmField val originalLocale: Locale? = null,
+    @JvmField val states: Set<MangaState> = emptySet(),
+    @JvmField val contentRating: Set<ContentRating> = emptySet(),
+    @JvmField val types: Set<ContentType> = emptySet(),
+    @JvmField val demographics: Set<Demographic> = emptySet(),
+    @JvmField val year: Int = YEAR_UNKNOWN,
+    @JvmField val yearFrom: Int = YEAR_UNKNOWN,
+    @JvmField val yearTo: Int = YEAR_UNKNOWN,
+) {
 
-    fun isEmpty(): Boolean
+	private fun isNonSearchOptionsEmpty(): Boolean = tags.isEmpty() &&
+		tagsExclude.isEmpty() &&
+		locale == null &&
+		originalLocale == null &&
+		states.isEmpty() &&
+		contentRating.isEmpty() &&
+		year == YEAR_UNKNOWN &&
+		yearFrom == YEAR_UNKNOWN &&
+		yearTo == YEAR_UNKNOWN &&
+		types.isEmpty() &&
+		demographics.isEmpty()
 
-    val sortOrder: SortOrder?
+	public fun isEmpty(): Boolean = isNonSearchOptionsEmpty() && query.isNullOrEmpty()
 
-    data class Search(
-        @JvmField val query: String,
-    ) : MangaListFilter {
+	public fun isNotEmpty(): Boolean = !isEmpty()
 
-        override val sortOrder: SortOrder? = null
+	public fun hasNonSearchOptions(): Boolean = !isNonSearchOptionsEmpty()
 
-        override fun isEmpty() = query.isBlank()
-    }
+	public companion object {
 
-    data class Advanced(
-        override val sortOrder: SortOrder,
-        @JvmField val tags: Set<MangaTag>,
-        @JvmField val tagsExclude: Set<MangaTag>,
-        @JvmField val locale: Locale?,
-        @JvmField val states: Set<MangaState>,
-        @JvmField val contentRating: Set<ContentRating>,
-    ) : MangaListFilter {
-
-        override fun isEmpty(): Boolean =
-            tags.isEmpty() && tagsExclude.isEmpty() && locale == null && states.isEmpty() && contentRating.isEmpty()
-    }
+		@JvmStatic
+		public val EMPTY: MangaListFilter = MangaListFilter()
+	}
 }

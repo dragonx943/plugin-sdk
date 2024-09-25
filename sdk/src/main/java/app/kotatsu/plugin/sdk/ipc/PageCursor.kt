@@ -2,7 +2,7 @@ package app.kotatsu.plugin.sdk.ipc
 
 import app.kotatsu.plugin.sdk.core.MangaPage
 
-class PageCursor(
+internal class PageCursor(
     dataset: List<MangaPage>,
 ) : MapperCursor<MangaPage>(dataset) {
 

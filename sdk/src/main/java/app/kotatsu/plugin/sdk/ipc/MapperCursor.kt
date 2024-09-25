@@ -2,8 +2,8 @@ package app.kotatsu.plugin.sdk.ipc
 
 import android.database.AbstractCursor
 
-abstract class MapperCursor<T>(
-    protected val dataset: List<T>,
+internal abstract class MapperCursor<T>(
+    private val dataset: List<T>,
 ) : AbstractCursor() {
 
     private var index = 0
