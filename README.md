@@ -6,17 +6,10 @@ This library helps to create a standalone manga source plugin for Kotatsu as a s
 
 - Install App (Kotatsu / Kotatsu Nightly):
 
-1. Kotatsu:
+> - Kotatsu: https://github.com/KotatsuApp/Kotatsu/releases/latest
+> - Kotatsu Nightly: https://github.com/KotatsuApp/Kotatsu-nightly/releases/latest
 
-https://github.com/KotatsuApp/Kotatsu/releases/latest
-
-2. Kotatsu Nightly:
-
-https://github.com/KotatsuApp/Kotatsu-nightly/releases/latest
-
-- Download and install plugins from this repository:
-
-https://github.com/dragonx943/plugin-sdk/releases
+- Download and install plugins from this repository: https://github.com/dragonx943/plugin-sdk/releases
 
 ## Disclaimer
 
