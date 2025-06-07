@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace 'app.kotatsu.parser.yurigarden'
+    namespace 'app.kotatsu.parser.yurigarden18'
     compileSdk 36
 
     defaultConfig {
-        applicationId "app.kotatsu.parser.yurigarden"
+        applicationId "app.kotatsu.parser.yurigarden18"
         minSdk 21
         targetSdk 36
         versionCode 1

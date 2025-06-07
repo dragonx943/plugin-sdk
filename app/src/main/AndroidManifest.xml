@@ -11,8 +11,8 @@
         tools:ignore="DataExtractionRules">
 
         <provider
-            android:name="app.kotatsu.parser.yurigarden.YuriGardenContentProvider"
-            android:authorities="app.kotatsu.parser.yurigarden"
+            android:name="app.kotatsu.parser.yurigarden18.YuriGardenContentProvider"
+            android:authorities="app.kotatsu.parser.yurigarden18"
             android:description="@string/app_description"
             android:enabled="true"
             android:exported="true"

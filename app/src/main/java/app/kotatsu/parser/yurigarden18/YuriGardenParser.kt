@@ -1,4 +1,4 @@
-package app.kotatsu.parser.yurigarden
+package app.kotatsu.parser.yurigarden18
 
 import androidx.collection.arraySetOf
 import app.kotatsu.plugin.sdk.core.Manga
@@ -86,7 +86,7 @@ class YuriGardenParser(
             append(offset / 234)
             append("&limit=234")
             append("&r18=")
-            append("false") // true
+            append("true") // false
 
             append("&sort=")
             append(when (order) {
