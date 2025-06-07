@@ -1,9 +1,9 @@
 [versions]
-agp = "8.5.1"
-kotlin = "2.0.10"
+agp = "8.10.1"
+kotlin = "2.1.21"
 okhttp = "4.12.0"
-jsoup = "1.18.1"
-collection = "1.4.4"
+jsoup = "1.20.1"
+collection = "1.5.0"
 
 [libraries]
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
