@@ -37,7 +37,7 @@ class YuriGardenParser(
     authority: String,
 ) : MangaParser(authority) {
 
-    private val paginator = Paginator(initialPageSize = 234)
+    private val paginator = Paginator(initialPageSize = 18)
     private val sourceLocale = Locale("vi_VN")
 
     override val filterCapabilities = MangaListFilterCapabilities(
@@ -72,7 +72,7 @@ class YuriGardenParser(
     override fun intercept(chain: Interceptor.Chain): Response {
         return chain.proceed(
             chain.request().newBuilder()
-                .header("x-app-origin", "https://$domain")
+                .header(CommonHeaders.REFERER, "no-referrer")
                 .build()
         )
     }
@@ -83,10 +83,11 @@ class YuriGardenParser(
             append(apiSuffix)
             append("/comics")
             append("?page=")
-            append(offset / 234)
-            append("&limit=234")
+            append(offset / 20)
+            append("&limit=")
+            append(20)
             append("&r18=")
-            append("false") // true
+            append("true") // fix to refactor
 
             append("&sort=")
             append(when (order) {
