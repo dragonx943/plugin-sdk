@@ -16,8 +16,9 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven { url 'https://jitpack.io' }
     }
 }
 
-rootProject.name = "PluginSDK"
-include ':sdk'
+rootProject.name = "YuriGarden"
+include ':app'

@@ -1,3 +1,9 @@
 # Default ignored files
 /shelf/
 /workspace.xml
+/compiler.xml
+/deploymentTargetSelector.xml
+/migrations.xml
+/misc.xml
+/render.experimental.xml
+/runConfigurations.xml
