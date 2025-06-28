@@ -9,7 +9,6 @@ import app.kotatsu.plugin.sdk.core.MangaPage
 import app.kotatsu.plugin.sdk.core.MangaParser
 import app.kotatsu.plugin.sdk.core.MangaTag
 import app.kotatsu.plugin.sdk.core.SortOrder
-import app.kotatsu.plugin.sdk.core.exception.ParseException
 import app.kotatsu.plugin.sdk.network.Paginator
 import app.kotatsu.plugin.sdk.util.generateUid
 import app.kotatsu.plugin.sdk.util.json.asTypedList
@@ -18,9 +17,9 @@ import app.kotatsu.plugin.sdk.util.json.mapJSON
 import app.kotatsu.plugin.sdk.util.json.mapJSONToSet
 import app.kotatsu.plugin.sdk.util.parseJson
 import app.kotatsu.plugin.sdk.util.parseJsonArray
+import app.kotatsu.plugin.sdk.util.toAbsoluteUrl
 import app.kotatsu.plugin.sdk.util.toTitleCase
 import app.kotatsu.plugin.sdk.util.urlEncoded
-import app.kotatsu.plugin.sdk.util.toAbsoluteUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.json.JSONArray
 import java.text.SimpleDateFormat
@@ -32,7 +31,7 @@ class MimiHentaiParser(
 ) : MangaParser(authority) {
 
     private val paginator = Paginator(initialPageSize = 18)
-    private val sourceLocale = Locale("vi_VN")
+    private val sourceLocale = Locale("vi_VN") // Deprecated in Java
 
     override val filterCapabilities = MangaListFilterCapabilities(
         availableSortOrders = EnumSet.of(
@@ -51,7 +50,7 @@ class MimiHentaiParser(
     )
 
     override val domain = "mimihentai.com"
-    protected val apiSuffix = "api/v1/manga"
+    private val apiSuffix = "api/v1/manga"
 
     init {
         paginator.firstPage = 0
@@ -64,12 +63,12 @@ class MimiHentaiParser(
     override fun getList(offset: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
         val url = buildString {
             append("https://")
-            append(domain + "/" + apiSuffix)
+            append("$domain/$apiSuffix")
 
             if (!filter.query.isNullOrEmpty() || filter.tags.isNotEmpty()) {
                 append("/advance-search?page=")
                 append(offset / 18)
-                append("&max=18") // page size, avoid rate limit
+                append("&max=18")
 
                 when {
                     !filter.query.isNullOrEmpty() -> {
@@ -262,14 +261,12 @@ class MimiHentaiParser(
             authorNames.joinToString(", ").takeIf { it.isNotEmpty() }
         }
 
-        val tags = jo.optJSONArray("genres")?.let { genresArray ->
-            genresArray.mapJSON { genre ->
-                MangaTag(
-                    key = genre.getLong("id").toString(),
-                    title = genre.getString("name"),
-                )
-            }.toSet()
-        } ?: emptySet()
+        val tags = jo.getJSONArray("genres").mapJSON { genre ->
+            MangaTag(
+                key = genre.getLong("id").toString(),
+                title = genre.getString("name"),
+            )
+        }.toSet()
 
         return Manga(
             id = generateUid(id),
@@ -288,10 +285,12 @@ class MimiHentaiParser(
     }
 
     override fun getChapters(url: String): List<MangaChapter> {
+        // for uploader
         val jo = webClient.httpGet(url.toAbsoluteUrl(domain).toHttpUrl()).parseJson()
         val id = jo.getLong("id")
         val uploaderName = jo.getJSONObject("uploader").getString("displayName")
-        
+
+        // for get chapters
         val urlChaps = "/$apiSuffix/gallery/$id".toAbsoluteUrl(domain).toHttpUrl()
         val parsedChapters = webClient.httpGet(urlChaps).parseJsonArray()
         val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS", Locale.US)
