@@ -92,11 +92,10 @@ class MimiHentaiParser(
                     when (order) {
                         SortOrder.UPDATED -> "updated_at"
                         SortOrder.ALPHABETICAL -> "title"
-                        SortOrder.POPULARITY,
+                        SortOrder.POPULARITY -> "follows"
                         SortOrder.POPULARITY_TODAY,
                         SortOrder.POPULARITY_WEEK,
                         SortOrder.POPULARITY_MONTH -> "views"
-
                         SortOrder.RATING -> "likes"
                         else -> ""
                     }
@@ -106,10 +105,10 @@ class MimiHentaiParser(
                     when (order) {
                         SortOrder.UPDATED -> "/tatcatruyen?page=${offset / 18}&sort=updated_at"
                         SortOrder.ALPHABETICAL -> "/tatcatruyen?page=${offset / 18}&sort=title"
-                        SortOrder.POPULARITY -> "/tatcatruyen?page=${offset / 18}&sort=views"
-                        SortOrder.POPULARITY_TODAY -> "/top-manga?page=${offset / 18}&timeType=1&limit=18"
-                        SortOrder.POPULARITY_WEEK -> "/top-manga?page=${offset / 18}&timeType=2&limit=18"
-                        SortOrder.POPULARITY_MONTH -> "/top-manga?page=${offset / 18}&timeType=3&limit=18"
+                        SortOrder.POPULARITY -> "/tatcatruyen?page=${offset / 18}&sort=follows"
+                        SortOrder.POPULARITY_TODAY -> "/tatcatruyen?page=${offset / 18}&sort=views"
+                        SortOrder.POPULARITY_WEEK -> "/top-manga?page=${offset / 18}&timeType=1&limit=18"
+                        SortOrder.POPULARITY_MONTH -> "/top-manga?page=${offset / 18}&timeType=2&limit=18"
                         SortOrder.RATING -> "/tatcatruyen?page=${offset / 18}&sort=likes"
                         else -> "/tatcatruyen?page=${offset / 18}&sort=updated_at" // default
                     }
