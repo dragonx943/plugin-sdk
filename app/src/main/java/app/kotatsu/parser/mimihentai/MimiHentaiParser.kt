@@ -21,6 +21,8 @@ import app.kotatsu.plugin.sdk.util.toAbsoluteUrl
 import app.kotatsu.plugin.sdk.util.toTitleCase
 import app.kotatsu.plugin.sdk.util.urlEncoded
 import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.Interceptor
+import okhttp3.Response
 import org.json.JSONArray
 import java.text.SimpleDateFormat
 import java.util.EnumSet
@@ -70,21 +72,19 @@ class MimiHentaiParser(
                 append(offset / 18)
                 append("&max=18")
 
-                when {
-                    !filter.query.isNullOrEmpty() -> {
-                        append("&name=")
-                        append(checkNotNull(filter.query).urlEncoded())
-                    }
+                if (!filter.query.isNullOrEmpty()) {
+                    append("&name=")
+                    append(checkNotNull(filter.query).urlEncoded())
+                }
 
-                    filter.tags.isNotEmpty() -> {
-                        append("&genre=")
-                        append(filter.tags.joinToString(",") { it.key })
-                    }
+                if (filter.tags.isNotEmpty()) {
+                    append("&genre=")
+                    append(filter.tags.joinToString(",") { it.key })
+                }
 
-                    filter.tagsExclude.isNotEmpty() -> {
-                        append("&ex=")
-                        append(filter.tagsExclude.joinToString(",") { it.key })
-                    }
+                if (filter.tagsExclude.isNotEmpty()) {
+                    append("&ex=")
+                    append(filter.tagsExclude.joinToString(",") { it.key })
                 }
 
                 append("&sort=")
@@ -328,5 +328,13 @@ class MimiHentaiParser(
                 key = jo.getLong("id").toString(),
             )
         }
+    }
+
+    override fun intercept(chain: Interceptor.Chain): Response {
+        val request = chain.request()
+        val newRequest = request.newBuilder()
+            .header("User-Agent", "Kotatsu/6.8 (Android 13;;; en)")
+            .build()
+        return chain.proceed(newRequest)
     }
 }
