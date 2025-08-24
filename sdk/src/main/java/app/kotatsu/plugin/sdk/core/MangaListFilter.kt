@@ -1,7 +1,6 @@
 package app.kotatsu.plugin.sdk.core
 
-import app.kotatsu.plugin.sdk.core.ContentRating
-import java.util.*
+import java.util.Locale
 
 public data class MangaListFilter(
     @JvmField val query: String? = null,
@@ -16,29 +15,31 @@ public data class MangaListFilter(
     @JvmField val year: Int = YEAR_UNKNOWN,
     @JvmField val yearFrom: Int = YEAR_UNKNOWN,
     @JvmField val yearTo: Int = YEAR_UNKNOWN,
+    @JvmField val author: String? = null,
 ) {
 
-	private fun isNonSearchOptionsEmpty(): Boolean = tags.isEmpty() &&
-		tagsExclude.isEmpty() &&
-		locale == null &&
-		originalLocale == null &&
-		states.isEmpty() &&
-		contentRating.isEmpty() &&
-		year == YEAR_UNKNOWN &&
-		yearFrom == YEAR_UNKNOWN &&
-		yearTo == YEAR_UNKNOWN &&
-		types.isEmpty() &&
-		demographics.isEmpty()
+    private fun isNonSearchOptionsEmpty(): Boolean = tags.isEmpty() &&
+            tagsExclude.isEmpty() &&
+            locale == null &&
+            originalLocale == null &&
+            states.isEmpty() &&
+            contentRating.isEmpty() &&
+            year == YEAR_UNKNOWN &&
+            yearFrom == YEAR_UNKNOWN &&
+            yearTo == YEAR_UNKNOWN &&
+            types.isEmpty() &&
+            demographics.isEmpty() &&
+            author.isNullOrEmpty()
 
-	public fun isEmpty(): Boolean = isNonSearchOptionsEmpty() && query.isNullOrEmpty()
+    public fun isEmpty(): Boolean = isNonSearchOptionsEmpty() && query.isNullOrEmpty()
 
-	public fun isNotEmpty(): Boolean = !isEmpty()
+    public fun isNotEmpty(): Boolean = !isEmpty()
 
-	public fun hasNonSearchOptions(): Boolean = !isNonSearchOptionsEmpty()
+    public fun hasNonSearchOptions(): Boolean = !isNonSearchOptionsEmpty()
 
-	public companion object {
+    public companion object {
 
-		@JvmStatic
-		public val EMPTY: MangaListFilter = MangaListFilter()
-	}
+        @JvmStatic
+        public val EMPTY: MangaListFilter = MangaListFilter()
+    }
 }

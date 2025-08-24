@@ -24,6 +24,7 @@ import app.kotatsu.plugin.sdk.ipc.StringCursor
 import app.kotatsu.plugin.sdk.ipc.TagCursor
 import app.kotatsu.plugin.sdk.util.find
 import app.kotatsu.plugin.sdk.util.mapNotNullToSet
+import app.kotatsu.plugin.sdk.util.nullIfEmpty
 import app.kotatsu.plugin.sdk.util.splitTwoParts
 import java.util.Locale
 
@@ -119,7 +120,7 @@ public abstract class KotatsuParserContentProvider<P : MangaParser>(
     protected abstract fun onCreateParser(): P
 
     private fun getFilter(uri: Uri): MangaListFilter = MangaListFilter(
-        query = uri.getQueryParameter("query"),
+        query = uri.getQueryParameter("query")?.nullIfEmpty(),
         tags = uri.getQueryParameters("tags_include").mapNotNullToSet {
             val parts = it.splitTwoParts('=') ?: return@mapNotNullToSet null
             MangaTag(key = parts.first, title = parts.second)
@@ -144,7 +145,8 @@ public abstract class KotatsuParserContentProvider<P : MangaParser>(
         },
         year = uri.getQueryParameter("year")?.toIntOrNull() ?: YEAR_UNKNOWN,
         yearFrom = uri.getQueryParameter("year_from")?.toIntOrNull() ?: YEAR_UNKNOWN,
-        yearTo = uri.getQueryParameter("year_to")?.toIntOrNull() ?: YEAR_UNKNOWN
+        yearTo = uri.getQueryParameter("year_to")?.toIntOrNull() ?: YEAR_UNKNOWN,
+        author = uri.getQueryParameter("author")?.nullIfEmpty(),
     )
 
     private companion object {
