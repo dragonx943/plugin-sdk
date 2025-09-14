@@ -1,5 +1,6 @@
 package app.kotatsu.plugin.sdk.core
 
+import androidx.annotation.CallSuper
 import app.kotatsu.plugin.sdk.network.CommonHeaders
 import app.kotatsu.plugin.sdk.network.WebClient
 import app.kotatsu.plugin.sdk.util.toAbsoluteUrl
@@ -23,6 +24,7 @@ public abstract class MangaParser(internal val authority: String) : Interceptor 
     @Suppress("LeakingThis")
     protected val webClient: WebClient = WebClient(this)
 
+    @CallSuper
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
         val headersBuilder = request.headers.newBuilder()

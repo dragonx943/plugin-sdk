@@ -19,6 +19,7 @@ internal class CapabilitiesCursor(
         COLUMN_YEAR -> isYearSupported.asInt()
         COLUMN_YEAR_RANGE -> isYearRangeSupported.asInt()
         COLUMN_ORIGINAL_LOCALE -> isOriginalLocaleSupported.asInt()
+        COLUMN_AUTHOR -> isAuthorSearchSupported.asInt()
         else -> throw IndexOutOfBoundsException()
     }
 
@@ -32,6 +33,7 @@ internal class CapabilitiesCursor(
         const val COLUMN_YEAR = "year"
         const val COLUMN_YEAR_RANGE = "year_range"
         const val COLUMN_ORIGINAL_LOCALE = "original_locale"
+        const val COLUMN_AUTHOR = "author"
 
         val COLUMNS = arrayOf(
             COLUMN_SORT_ORDERS,
@@ -42,6 +44,7 @@ internal class CapabilitiesCursor(
             COLUMN_YEAR,
             COLUMN_YEAR_RANGE,
             COLUMN_ORIGINAL_LOCALE,
+            COLUMN_AUTHOR,
         )
     }
 }
