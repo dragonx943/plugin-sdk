@@ -258,7 +258,7 @@ class YuriGardenParser(
         val newRequest = request.newBuilder()
             .header("x-app-origin", "https://$domain")
             .header(CommonHeaders.USER_AGENT, "Kotatsu/9.0 (Android 16;;; en)")
-            .header("Referer", "https://$domain/")
+            .header(CommonHeaders.REFERER, "https://$domain/")
             .header("Origin", "https://$domain")
             .build()
         return super.intercept(object : Interceptor.Chain by chain {

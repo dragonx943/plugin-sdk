@@ -31,7 +31,7 @@ class ImageProvider : ContentProvider() {
                 ParcelFileDescriptor.AutoCloseOutputStream(writeFd).use { out ->
                     val req = Request.Builder()
                         .url(url)
-                        .header("Referer", "https://$domain/")
+                        .header(CommonHeaders.REFERER, "https://$domain/")
                         .header("Origin", "https://$domain")
                         .header(CommonHeaders.USER_AGENT, "Kotatsu/9.0 (Android 16;;; en)")
                         .build()
