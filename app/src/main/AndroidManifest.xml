@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:allowBackup="false"
         android:fullBackupContent="false"
@@ -24,6 +26,15 @@
                 <action android:name="app.kotatsu.parser.PROVIDE_MANGA" />
             </intent-filter>
         </provider>
+
+        <provider
+            android:name="app.kotatsu.parser.yurigarden.ImageProvider"
+            android:authorities="app.kotatsu.parser.yurigarden.images"
+            android:enabled="true"
+            android:exported="true"
+            android:grantUriPermissions="true"
+            tools:ignore="ExportedContentProvider" />
+
     </application>
 
 </manifest>
