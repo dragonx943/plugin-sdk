@@ -1,12 +1,15 @@
 [versions]
-agp = "8.10.1"
-kotlin = "2.1.21"
-kotatsu-sdk = "f1b780b616"
+agp = "8.13.2"
+kotlin = "2.3.10"
+kotatsu-sdk = "c33ba8ce0c"
+nanohttpd = "2.3.1"
+rhino = "1.9.1"
 
 [libraries]
-kotatsu-sdk = { group = "com.github.KotatsuApp", name = "plugin-sdk", version.ref = "kotatsu-sdk" }
+kotatsu-sdk = { group = "com.github.dragonx943", name = "plugin-sdk", version.ref = "kotatsu-sdk" }
+nanohttpd = { module = "org.nanohttpd:nanohttpd", version.ref = "nanohttpd" }
+rhino = { module = "org.mozilla:rhino", version.ref = "rhino" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-

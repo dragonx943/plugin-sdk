@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace 'app.kotatsu.parser.yurigarden'
-    compileSdk 36
+    compileSdk = 36
 
     defaultConfig {
         applicationId "app.kotatsu.parser.yurigarden"
@@ -25,11 +25,13 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-    kotlinOptions {
-        jvmTarget = '1.8'
+    kotlin {
+        jvmToolchain(17)
     }
 }
 
 dependencies {
     implementation libs.kotatsu.sdk
+    implementation libs.nanohttpd
+    implementation libs.rhino
 }

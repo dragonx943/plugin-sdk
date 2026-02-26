@@ -17,16 +17,17 @@ import app.kotatsu.plugin.sdk.util.generateUid
 import app.kotatsu.plugin.sdk.util.json.asTypedList
 import app.kotatsu.plugin.sdk.util.json.getBooleanOrDefault
 import app.kotatsu.plugin.sdk.util.json.getFloatOrDefault
-import app.kotatsu.plugin.sdk.util.json.getStringOrNull
 import app.kotatsu.plugin.sdk.util.json.mapJSON
+import app.kotatsu.plugin.sdk.util.mapChapters
 import app.kotatsu.plugin.sdk.util.mapNotNullToSet
-import app.kotatsu.plugin.sdk.util.nullIfEmpty
 import app.kotatsu.plugin.sdk.util.oneOrThrowIfMany
 import app.kotatsu.plugin.sdk.util.parseJson
 import app.kotatsu.plugin.sdk.util.parseJsonArray
 import app.kotatsu.plugin.sdk.util.toTitleCase
 import app.kotatsu.plugin.sdk.util.urlEncoded
+import fi.iki.elonen.NanoHTTPD.SOCKET_READ_TIMEOUT
 import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.Interceptor
 import okhttp3.Response
 import org.json.JSONObject
@@ -37,26 +38,33 @@ class YuriGardenParser(
     authority: String,
 ) : MangaParser(authority) {
 
-    private val paginator = Paginator(initialPageSize = 234)
-    private val sourceLocale = Locale("vi_VN")
+    private val paginator = Paginator(initialPageSize = 18)
+    private val isR18Enable: Boolean = false
+    private val sourceLocale = Locale.Builder()
+        .setLanguage("vi")
+        .setRegion("VN")
+        .build()
 
     override val filterCapabilities = MangaListFilterCapabilities(
         availableSortOrders = EnumSet.of(
-            SortOrder.POPULARITY,
-            SortOrder.RATING,
-            SortOrder.UPDATED,
             SortOrder.NEWEST,
+            SortOrder.NEWEST_ASC,
         ),
-        isMultipleTagsSupported = true,
         isSearchSupported = true,
+        isMultipleTagsSupported = true,
         isSearchWithFiltersSupported = true,
     )
 
     override val domain = "yurigarden.com"
-    protected val apiSuffix = "api.$domain"
+    private val apiSuffix = "api.$domain"
+    private val cdnSuffix = "db.$domain/storage/v1/object/public/yuri-garden-store"
 
     init {
         paginator.firstPage = 1
+        if (server == null) {
+            server = ProxyServer()
+            server!!.start(SOCKET_READ_TIMEOUT, false)
+        }
     }
 
     override fun getFilterOptions() = MangaListFilterOptions(
@@ -66,16 +74,9 @@ class YuriGardenParser(
             MangaState.FINISHED,
             MangaState.ABANDONED,
             MangaState.PAUSED,
+            MangaState.UPCOMING,
         ),
     )
-
-    override fun intercept(chain: Interceptor.Chain): Response {
-        return chain.proceed(
-            chain.request().newBuilder()
-                .header("x-app-origin", "https://$domain")
-                .build()
-        )
-    }
 
     override fun getList(offset: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
         val url = buildString {
@@ -83,43 +84,44 @@ class YuriGardenParser(
             append(apiSuffix)
             append("/comics")
             append("?page=")
-            append(offset / 234)
-            append("&limit=234")
+            append(offset / 18)
+            append("&limit=18")
             append("&r18=")
-            append("false") // true
+            append(isR18Enable)
 
             append("&sort=")
             append(when (order) {
-                SortOrder.RELEVANCE -> "relevance"
                 SortOrder.NEWEST -> "newest"
                 SortOrder.NEWEST_ASC -> "oldest"
-                SortOrder.RATING -> "rating"
-                SortOrder.POPULARITY -> "popularity"
-                else -> "relevance"
+                else -> "newest"
             })
 
             if (!filter.query.isNullOrEmpty()) {
                 append("&search=")
-                append(checkNotNull(filter.query).urlEncoded())
+                append(filter.query!!.urlEncoded())
             }
 
             if (filter.states.isNotEmpty()) {
-                filter.states.oneOrThrowIfMany()?.let {
+                filter.states.oneOrThrowIfMany()?.let { state ->
                     append("&status=")
-                    append(when (it) {
+                    append(when (state) {
                         MangaState.ONGOING -> "ongoing"
                         MangaState.FINISHED -> "completed"
                         MangaState.PAUSED -> "hiatus"
                         MangaState.ABANDONED -> "cancelled"
-                        else -> ""
+                        MangaState.UPCOMING -> "oncoming"
                     })
                 }
+            } else {
+                append("&status=all")
             }
 
+            append("&full=true")
+
             if (filter.tags.isNotEmpty()) {
-				append("&genre=")
-				append(filter.tags.joinToString(separator = ",") { it.key })
-			}
+                append("&genre=")
+                append(filter.tags.joinToString(separator = ",") { it.key })
+            }
         }
 
         val json = webClient.httpGet(url.toHttpUrl()).parseJson()
@@ -127,23 +129,37 @@ class YuriGardenParser(
 
         return data.mapJSON { jo ->
             val id = jo.getLong("id")
+            val thumbnail = jo.getString("thumbnail")
+            val altTitles = jo.optJSONArray("anotherNames")
+                ?.asTypedList<String>()
+                ?.joinToString(", ") { it }
+            val tags = fetchTags().let { allTags ->
+                jo.optJSONArray("genres")?.asTypedList<String>()?.mapNotNullToSet { g ->
+                    allTags.find { x -> x.key == g }
+                }
+            }.orEmpty()
             Manga(
                 id = generateUid(id),
                 url = "/comics/$id",
                 publicUrl = "https://$domain/comic/$id",
                 title = jo.getString("title"),
-                altTitle = null,
-                coverUrl = jo.getString("thumbnail"),
+                altTitle = altTitles,
+                coverUrl = if (thumbnail.startsWith("comics/"))
+                    "https://$cdnSuffix/$thumbnail" else thumbnail,
+                largeCoverUrl = if (thumbnail.startsWith("comics/"))
+                    "https://$cdnSuffix/$thumbnail" else thumbnail,
                 author = null,
-                tags = emptySet(),
-                state = when(jo.getString("status")) {
+                tags = tags,
+                state = when (jo.optString("status")) {
                     "ongoing" -> MangaState.ONGOING
                     "completed" -> MangaState.FINISHED
                     "hiatus" -> MangaState.PAUSED
                     "cancelled" -> MangaState.ABANDONED
+                    "oncoming" -> MangaState.UPCOMING
                     else -> null
                 },
-                isNsfw = if (jo.getBooleanOrDefault("r18", false)) true else false,
+                description = jo.optString("description").orEmpty(),
+                isNsfw = jo.getBooleanOrDefault("r18", false),
                 rating = jo.getFloatOrDefault("rating", -5f) / 5f,
             )
         }
@@ -153,9 +169,16 @@ class YuriGardenParser(
         val baseUrl = "https://$apiSuffix$url"
         val json = webClient.httpGet(baseUrl.toHttpUrl()).parseJson()
 
-        val authors = json.optJSONArray("authors")?.asTypedList<JSONObject>()?.mapNotNullToSet {
-            it.getStringOrNull("name")
-        }
+        val authors = json.optJSONArray("authors")?.asTypedList<JSONObject>()
+            ?.mapTo(HashSet()) { jo ->
+                jo.getString("name")
+            }.orEmpty()
+
+        val altTitles = json.optJSONArray("anotherNames")
+            ?.asTypedList<String>()
+            ?.joinToString(", ") { it }
+
+        val description = json.getString("description")
 
         val allTags = fetchTags()
         val tags = allTags.let { allTags ->
@@ -167,15 +190,11 @@ class YuriGardenParser(
         return Manga(
             id = generateUid(json.getLong("id")),
             title = json.getString("title"),
-            altTitle = json.getString("anotherName"),
-            isNsfw = if (json.getBooleanOrDefault("r18", false)) {
-                true
-            } else {
-                false
-            },
-            author = authors?.joinToString()?.nullIfEmpty(),
+            altTitle = altTitles,
+            isNsfw = json.getBooleanOrDefault("r18", false),
+            author = authors.joinToString(", "),
             tags = tags,
-            description = json.getString("description"),
+            description = description,
             state = when (json.getString("status")) {
                 "ongoing" -> MangaState.ONGOING
                 "completed" -> MangaState.FINISHED
@@ -192,34 +211,85 @@ class YuriGardenParser(
     }
 
     override fun getChapters(url: String): List<MangaChapter> {
-        val baseUrl = "https://$apiSuffix$url"
-        val chapters = webClient.httpGet("$baseUrl/chapters".toHttpUrl()).parseJsonArray()
-        return chapters.asTypedList<JSONObject>().map { jo ->
-            val chapterId = jo.getLong("id")
-            val pageUrls = jo.getJSONArray("pages").mapJSON { page ->
-                page.getString("url")
-            }
+        val comicUrl = "https://$apiSuffix$url"
+        val json = webClient.httpGet(comicUrl.toHttpUrl()).parseJson()
+
+        val team = json.optJSONArray("groups")?.asTypedList<JSONObject>()?.flatMap { group ->
+            group.optJSONArray("teams")
+                ?.asTypedList<JSONObject>()
+                ?.mapNotNull { team -> team.optString("name") }
+                ?: emptyList()
+        }?.joinToString(", ").orEmpty()
+
+        val baseUrl = "https://$apiSuffix/chapters/comic/${url.substringAfterLast("/")}"
+        val chapters = webClient.httpGet(baseUrl.toHttpUrl()).parseJsonArray().asTypedList<JSONObject>()
+
+        return chapters.mapChapters { _, jo ->
+            val chapId = jo.getLong("id")
+            val chapterJson = webClient
+                .httpGet("https://$apiSuffix/chapters/$chapId".toHttpUrl())
+                .parseJson()
+
+            val pageUrls = chapterJson
+                .getJSONArray("pages")
+                .asTypedList<JSONObject>()
+                .map { page ->
+                    val rawUrl = page.getString("url").replace("_credit", "")
+                    val key = page.optString("key", "")
+
+                    val imageUrl = if (rawUrl.startsWith("comics/")) {
+                        "https://$cdnSuffix/$rawUrl"
+                    } else {
+                        rawUrl.toHttpUrlOrNull()?.toString() ?: rawUrl
+                    }
+
+                    if (key.isNotEmpty()) {
+                        "$LOCAL_PROXY?url=${imageUrl.urlEncoded()}&key=${key.urlEncoded()}"
+                    } else {
+                        imageUrl
+                    }
+                }
+
             MangaChapter(
-                id = generateUid(chapterId),
+                id = generateUid(chapId),
                 name = jo.getString("name"),
-                number = jo.getString("order").toFloat(),
-                volume = 0,
+                number = jo.getFloatOrDefault("order", 0f),
+                volume = jo.optInt("volume", 0),
                 url = pageUrls.joinToString("\n"),
-                scanlator = null, // team
+                scanlator = team,
                 uploadDate = jo.getLong("lastUpdated"),
                 branch = null,
+            )
+        }.sortedBy { it.number }
+    }
+
+    override fun getPages(url: String): List<MangaPage> {
+        return url.split("\n").mapIndexed { index, pageUrl ->
+            MangaPage(
+                id = generateUid(index.toLong()),
+                url = pageUrl,
+                preview = null,
             )
         }
     }
 
-    override fun getPages(url: String): List<MangaPage> {
-        return url.split("\n").mapIndexed { index, url ->
-            MangaPage(
-                id = generateUid(index.toLong()),
-                url = url,
-                preview = null,
-            )
+    override fun intercept(chain: Interceptor.Chain): Response {
+        val request = chain.request()
+
+        if (request.url.host == "127.0.0.1") {
+            return chain.proceed(request)
         }
+
+        val newRequest = request.newBuilder()
+            .header("x-app-origin", "https://$domain")
+            .header(CommonHeaders.USER_AGENT, "Kotatsu/9.0 (Android 16;;; en)")
+            .header("Referer", "https://$domain/")
+            .header("Origin", "https://$domain")
+            .build()
+
+        return super.intercept(object : Interceptor.Chain by chain {
+            override fun request() = newRequest
+        })
     }
 
     private fun fetchTags(): Set<MangaTag> {
@@ -232,5 +302,10 @@ class YuriGardenParser(
                 key = genre.getString("slug"),
             )
         }
+    }
+
+    companion object {
+        private const val LOCAL_PROXY = "http://127.0.0.1:8081/proxy"
+        private var server: ProxyServer? = null
     }
 }
